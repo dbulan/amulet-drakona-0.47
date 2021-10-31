@@ -1,0 +1,62 @@
+if ($login==$admin) {			//linkАдмин
+/* чтобы загрузить массив из файла: 
+// в template_npc.txt должно быть: $game['templates']=array(...)+$game['templates'];
+// обязательно новый массив идет первым, чтобы заменить старые значения! а в режиме админа:
+eval(implode("",file("template_npc.txt")));
+чтобы добавить в массив исп.: массив = массив_новый + массив
+*/
+	if (file_exists("flag_update")) echo "<a href=\"$PHP_SELF?sid=$sid&edit_eval=".urlencode("unlink('flag_update');")."\">delete flag</a>";
+		else echo "<a href=\"$PHP_SELF?sid=$sid&edit_op=eval&edit_view=%24player&data=%24file%3Dfopen%28%27flag_update%27%2C+%27w%27%29%3Bfputs%28%5C%24file%2C%27+%27%29%3Bfclose%28%24file%29%3B\">set flag</a>";
+	echo " <a href=$PHP_SELF?sid=$sid&edit_view=\$game>\$game</a> <a href=$PHP_SELF?sid=$sid&load_offline=1&edit_view=\$game['loc']['loc.offline']>loc.offline</a> <a href=$PHP_SELF?sid=$sid&edit_view=\$game['players']>Игроки</a> <a href=$PHP_SELF?sid=$sid&edit_view=\$game['loc']>Локации</a> <a href=$PHP_SELF?sid=$sid&edit_op=del51>Удалить 5-1</a>  <a href=$PHP_SELF?sid=$sid&edit_op=all>all</a> <a href=$PHP_SELF?sid=$sid&edit_op=rename>rename</a>";
+	if ($edit_op=="del51") {
+		eval(implode('',file("f_loadoffline.dat")));
+		foreach(array_keys($game["loc"]["loc.offline"]) as $i) {
+			$war=split("\|",$game["loc"]["loc.offline"][$i]["war"]);
+			if ($war[13]==5 && time()-$game["loc"]["loc.offline"][$i]["time"]>3600*24) {unset($game["loc"]["loc.offline"][$i]); $game["all"]=$game["all"]-1;}
+			}
+		}
+	if ($edit_op=="all") {
+		eval(implode('',file("f_loadoffline.dat")));
+		$game["all"]=count($game["loc"]["loc.offline"])+count($game["players"]);
+		}
+	if ($edit_op=="rename") {
+		eval(implode('',file("f_loadoffline.dat")));
+		$num=1;
+		foreach(array_keys($game["players"]) as $i) {
+			foreach(array_keys($game["players"]) as $j) if ($i!=$j) if ($game["loc"][$game["players"][$i]][$i]["title"]==$game["loc"][$game["players"][$j]][$j]["title"]) {$game["loc"][$game["players"][$j]][$j]["title"].=$num; $num++;}
+			foreach(array_keys($game["loc"]["loc.offline"]) as $j) if ($i!=$j) if ($game["loc"][$game["players"][$i]][$i]["title"]==$game["loc"]["loc.offline"][$j]["title"]) {$game["loc"]["loc.offline"][$j]["title"].=$num; $num++;}
+			}
+		if ($game["loc"]["loc.offline"]) foreach(array_keys($game["loc"]["loc.offline"]) as $i) {
+			foreach(array_keys($game["players"]) as $j) if ($i!=$j) if ($game["loc"]["loc.offline"][$i]["title"]==$game["loc"][$game["players"][$j]][$j]["title"]) {$game["loc"][$game["players"][$j]][$j]["title"].=$num; $num++;}
+			foreach(array_keys($game["loc"]["loc.offline"]) as $j) if ($i!=$j) if ($game["loc"]["loc.offline"][$i]["title"]==$game["loc"]["loc.offline"][$j]["title"]) {$game["loc"]["loc.offline"][$j]["title"].=$num; $num++;}
+			}
+		}
+	if ($edit_op=="eval") $edit_eval=$data;
+	if ($edit_op=="view") $edit_view=$data;
+	if ($edit_eval) {			// выполнение скрипта $edit_eval
+		$edit_eval=str_replace("\\","",$edit_eval); 
+		if ($edit_eval{strlen($edit_eval)-1}!=';') 
+		$edit_eval=$edit_eval.";"; 
+		eval($edit_eval); 
+		};
+	if ($edit_view) {			// просмотр указанной ветки массива $edit_view
+		echo "<p><a href=#edit>Редактировать</a><pre>";
+		$edit_view=str_replace("\\","",$edit_view);
+		//print_r($edit_view);
+		eval("print_r($edit_view);");
+		echo "</pre>";
+		}
+	echo "<a name=edit><p><br/><br/>
+		<form name=fmeval action=$PHP_SELF>
+		<input type=button value='Delete' onclick=\"javascript:if(window.confirm('Удалить?\\n\\n'+document.all.fmeval.data.value)){document.all.fmeval.data.value='unset('+document.all.fmeval.data.value+');';edit_op.value='eval';submit();}\">
+		<input type=button value=View onclick=javascript:edit_op.value='view';submit();>
+		<input type=button value=Eval onclick=javascript:edit_op.value='eval';submit();>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button value='Sort' onclick=\"javascript:document.all.fmeval.data.value='asort('+document.all.fmeval.data.value+');';edit_op.value='eval';submit();\">
+		<input type=hidden name=sid value=$sid>
+		<input type=hidden name=load_offline value=$load_offline>
+		<input type=hidden name=edit_op value=>
+		<input type=hidden name=edit_view value=$edit_view>
+		<textarea rows=15 cols=80 name=data>$edit_view</textarea>
+		</form>
+		";
+	}

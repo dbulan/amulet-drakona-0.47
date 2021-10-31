@@ -1,0 +1,27 @@
+// сказать текст всем
+
+	if ($t==1) {
+		$s=$say;
+		$c1eng = "ABCDEFGHIJKLMNOPRSTUVWXYZQabcdefghijklmnoprstuvwxyzq";
+		$c1rus = "јЅ÷ƒ≈‘√’»∆ ЋћЌќѕ–—“”¬Ўџ…«№абцдефгхижклмнопрстувшыйзь";
+		$search  = array ("'QQ'","'qq'","'CSH'","'SH'","'CH'","'YA'","'YU'","'YE'","'csh'","'sh'","'ch'","'ya'","'yu'","'ye'");
+		$replace = array ("Џ","ъ","ў","Ў","„","я","ё","Ё","щ","ш","ч","€","ю","э");
+		$s = preg_replace ($search, $replace, $s);
+		for ($i=0;$i<strlen($c1eng);$i++) $s=str_replace($c1eng{$i},$c1rus{$i},$s);
+		$say=$s;
+		}
+	$say=$to.$say;
+	// добавим всем, включа€ себ€, в журнал что сказали
+	if (!$player["ghost"]) addjournalall($player["loc"],$player["title"].": ".$say); 
+		else foreach (array_keys($game["loc"][$player["loc"]]) as $i) if (substr($i,0,5)=='user.'){
+		$skills=split("\|",$game["loc"][$player["loc"]][$i]["skills"]);
+		if (rand(0,100)<=$skills[21]*20) addjournal($i,$player["title"].": ".$say);
+			else {
+				$stmp = preg_replace("/[A-Zј-я]/","O",$say);
+				$stmp = preg_replace("/[a-zа-€]/","o",$stmp);
+				addjournal($i,$player["title"].": ".$stmp);
+				}
+		}
+	// добавим в макросы, что последнее действие было say
+	$player["macros"]["last"]["action"]="say";
+	$player["macros"]["last"]["object"]="\"".$say."\"";

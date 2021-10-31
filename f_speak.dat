@@ -1,0 +1,42 @@
+
+if ($speak) {			//linkСказать
+	if (($speak!=1 && substr($speak,0,5)!='user.' && substr($speak,0,4)!='npc.') || !isset($game["loc"][$player["loc"]][$speak])) msg("<p>Говорить можно только с игроками и NPC");
+	if (substr($speak,0,5)=='user.') {$to=$game["loc"][$game["players"][$speak]][$speak]["title"]; $speak=1;}	// разговор с игроком, подставим его имя в поле в расширенном экране разговора
+	if ($player["ghost"] && $speak!=1) msg("<p>Вы призрак и поэтому не можете ни с кем говорить, найдите лекаря или камень воскрешения");
+	if ($speak==1) {
+			eval(implode('',file("f_speak1.dat")));
+		} else 		// проверим, не наш ли это npc
+		if ($game["loc"][$player["loc"]][$speak]["owner"]==$login) {
+			eval(implode('',file("f_speakowner.dat")));
+		} else 		// проверим npc
+		if (isset($game["loc"][$player["loc"]][$speak]["speak"])) {
+			// $to содержит id предмета
+			if ($id=='buy') eval(implode('',file("f_speakbuy.dat")));
+			if ($id=='sell') eval(implode('',file("f_speaksell.dat")));
+			if ($id=='tobank') eval(implode('',file("f_speaktobank.dat")));
+			if ($id=='frombank') eval(implode('',file("f_speakfrombank.dat")));
+
+			eval(implode('',file("f_speakall.dat")));	// загружаем все диалоги
+			$dialog=$arr_speak[$game["loc"][$player["loc"]][$speak]["speak"]];
+
+			if ($dialog) {
+				if ($game["loc"][$player["loc"]][$speak]["attack"]==$login) msg("<p>Вы не можете разговаривать с персонажем, т.к. он вас атакует");
+				unset($player["attack"]);		// сбрасываем, если мы атакуем
+				if (!$id) $id="begin";	//FIX: если не указан id, то начнем с темы "begin"
+				$dialog=split("\|",$dialog[$id]);;
+				if ($dialog[0]=='magic') {			// добавляем магию
+					eval(implode('',file("f_speakmagic.dat")));
+					}
+				if ($dialog[0]=='skill') {			// увеличиваем скилл
+					eval(implode('',file("f_speakskillup.dat")));
+					}						//обычный диалог
+				$stmp="<p>".$dialog[0];
+				for($i=2;$i<count($dialog);$i+=2) $stmp.="<br/><a href=\"$PHP_SELF?sid=$sid&speak=$speak&id=".$dialog[$i]."\">".$dialog[$i-1]."</a>";
+				if (count($dialog)==1) $stmp.="<br/><a href=\"$PHP_SELF?sid=$sid\">[Конец диалога]</a>";
+				$stmp=str_replace("<name>",$player["title"],$stmp);	// заменяем <name> на имя игрока
+				msg($stmp,$game["loc"][$player["loc"]][$speak]["title"],1);
+				}
+			}
+	}
+	
+

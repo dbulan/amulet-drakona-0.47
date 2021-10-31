@@ -1,0 +1,68 @@
+
+if ($msg) {			//linkКонтакты
+	// выведем свой ID, список онлайн и возможность отправить
+	if ($msg==1) {	// основная страница
+		$stmp="Ваш ID: ".$login;
+		$stmp.="\n<br/><a href=\"#add\">[Добавить]</a>";
+		// список онлайн
+		$count=0;
+		foreach (array_keys($player["msg"]) as $i) {
+			if (isset($game["players"][$i])) {
+				$count++;
+				$stmp.="\n<br/><a href=\"$PHP_SELF?sid=$sid&msg=read&id=$i\">".$game["loc"][$game["players"][$i]][$i]["title"];
+				if ($player["msg"][$i]) $stmp.=" (+)";
+				$stmp.="</a>";
+				}
+			}
+		// список оффлайн
+		if (count($player["msg"])-$count>0) $stmp.="\n<br/>Оффлайн:";
+		foreach (array_keys($player["msg"]) as $i) {
+			 if (!isset($game["players"][$i])) {
+				$stmp.="\n<br/><a href=\"$PHP_SELF?sid=$sid&msg=read&id=$i\">".$game["loc"][$game["players"][$i]][$i]["title"];
+				if ($player["msg"][$i]) $stmp.=" (+)";
+				$stmp.="</a>";
+				}
+			}
+		// карта добавить
+		$stmp.="\n</p>\n</card>\n<card id=\"add\" title=\"Добавить\">\n<p>\nID (должен быть в виде user.ххх, регистр имеет значение):<br/><input name=\"id\"/>\n<br/><a href=\"$PHP_SELF?sid=$sid&msg=add&id=$(id)\">Добавить</a>";
+		}
+	if ($msg=='add') {		// добавить $id
+		if (!$id) msg("Вы должны указать ID того, кого хотите добавить в свои контакты");
+		$player["msg"][$id]="";
+		$stmp="ID ".$id." добавлен\n<br/><a href=\"$PHP_SELF?sid=$sid&msg=1\">Контакты</a>";
+		}
+	if ($msg=='del') {		// добавить $id
+		if (!$id) msg("Вы должны указать ID того, кого хотите удалить из своих контактов");
+		unset($player["msg"][$id]);
+		$stmp="ID ".$id." удален\n<br/><a href=\"$PHP_SELF?sid=$sid&msg=1\">Контакты</a>";
+		}
+	if ($msg=='read') {		// добавить $id
+		if (!$id) msg("Вы должны указать ID того, чьи сообщения хотите прочитать");
+		$stmp=$game["loc"][$game["players"][$id]][$id]["title"]." (ID: $id)\n<br/><a href=\"$PHP_SELF?sid=$sid&msg=del&id=$id\">[Удалить]</a>";
+		if (!$player["msg"][$id]) $stmp.="\n<br/>Сообщений нет";
+			else $stmp.="\n<br/>".substr($player["msg"][$id],strlen($player["msg"][$id])-700);
+		$stmp.="\n<br/><a href=\"#write\">[Написать]</a>";
+		$player["msg"][$id]="";	// удаляем прочитанные сообщения
+		// карта написать
+		$stmp.="\n</p>\n</card>\n<card id=\"write\" title=\"Написать\">\n<p>\n<input name=\"text\"/>\n<br/><a href=\"$PHP_SELF?sid=$sid&msg=write&id=$id&text=$(text)\">Отправить</a>";
+		}
+	if ($msg=='write') {		// добавить $id
+		if (!$id) msg("Вы должны указать ID того, кому пишете собщение");
+		if (!$text) msg("Нет текста для отправки");
+		eval(implode('',file("f_loadoffline.dat")));
+		if (!isset($game["players"][$id]) && !isset($game["loc"]["loc.offline"][$id])) msg("Нет пользователя с ID: $id");
+		if (isset($game["players"][$id])) {
+			if (!isset($game["loc"][$game["players"][$id]][$id]["msg"][$login])) msg("Вы не добавлены в контакты у пользователя с ID: $id");
+			if ($game["loc"][$game["players"][$id]][$id]["msg"][$login]) $game["loc"][$game["players"][$id]][$id]["msg"][$login].="<br/>";
+			$game["loc"][$game["players"][$id]][$id]["msg"][$login].="[".date("d.m H:i")."] ".strip_tags($text);
+			} else {
+				if (!isset($game["loc"]["loc.offline"][$id]["msg"][$login])) msg("Вы не добавлены в контакты у пользователя с ID: $id");
+				if ($game["loc"]["loc.offline"][$id]["msg"][$login]) $game["loc"]["loc.offline"][$id]["msg"][$login].="<br/>";
+				$game["loc"]["loc.offline"][$id]["msg"][$login].="[".date("d.m H:i")."] ".strip_tags($text);
+				}
+		$stmp="Сообщение для ID: ".$id." отправлено\n<br/><a href=\"$PHP_SELF?sid=$sid&msg=1\">Контакты</a>";
+		}
+
+	msg($stmp,"Контакты");
+	}
+

@@ -1,0 +1,8 @@
+		//if ($to) $to.=", ";
+		$page_main.= "<anchor>$to<refresh><setvar name=\"to\" value=\"$to, \"/></refresh></anchor>";
+		$page_main.="\n<br/><input name=\"to\" value=\"\"/>";
+		$page_main.="\n<br/><a href=\"#c1\">Шаблоны</a>";
+		$page_main.="\n<br/><input name=\"say\"  value=\"\"/>\n<br/><select name=\"t\" multiple=\"true\" value=\"1\"><option value=\"1\">Транслит</option></select>\n<br/><a href=\"$PHP_SELF?sid=$sid&t=$(t)&to=$(to)&say=$(say)\">Сказать</a>";
+		// карта общее
+		$page_main.="\n</p>\n</card>\n<card id=\"c1\" title=\"Шаблоны\">\n<p>\n<br/><anchor>привет!<go href=\"#main\"><setvar name=\"say\" value=\"привет!\"/></go></anchor>\n<br/><anchor>за мной!<go href=\"#main\"><setvar name=\"say\" value=\"за мной!\"/></go></anchor>\n<br/><anchor>помоги мне!<go href=\"#main\"><setvar name=\"say\" value=\"помоги мне!\"/></go></anchor>\n<br/><anchor>в атаку!<go href=\"#main\"><setvar name=\"say\" value=\"в атаку!\"/></go></anchor>\n<br/><anchor>отходим!<go href=\"#main\"><setvar name=\"say\" value=\"отходим!\"/></go></anchor>\n<br/><anchor>подожди<go href=\"#main\"><setvar name=\"say\" value=\"подожди\"/></go></anchor>";
+		msg($page_main);

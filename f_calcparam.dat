@@ -1,0 +1,70 @@
+
+//function calcparam($login) {	// пересчитаем основные параметры		// linkCalcparam
+	global $game;
+	if (!isset($game["players"][$login])) return;
+	$player=&$game["loc"][$game["players"][$login]][$login];
+	$skills=split("\|",$player["skills"]);
+	$player["life_max"]=10+$skills[0]*10;
+	if (!isset($player["life"])) $player["life"]=$player["life_max"];
+	$player["mana_max"]=10+$skills[2]*10;
+	if (!isset($player["mana"])) $player["mana"]=$player["mana_max"];
+	$uklon=10*($skills[1]+$skills[12]-5);
+	$parring=10*($skills[1]+$skills[11]-3);
+	$magic_uklon=10*($skills[2]+$skills[15]-7);
+	$magic_parring=10*($skills[2]+$skills[14]-1);
+	$magic_shield=10*($skills[14]);
+	// считаем крутость exp
+	for($i=0;$i<count($skills);$i++) if ($i!=3) $exp+=$skills[$i];	// кроме level
+	// что одето
+	$b=0;
+	$armor=0;
+	$shield=0;
+	if ($player["equip"]) foreach(array_keys($player["equip"]) as $i) {
+		if (!isset($player["items"][$player["equip"][$i]])) {unset($player["equip"][$i]); continue;};	// нет такого предмета, ошибка
+		$item=split("\|",$player["items"][$player["equip"][$i]]);
+		if ($i=="body" || $i=="hand" || $i=="leg" || $i=="head") $armor+=$item[3];	//armor
+		if ($i=="shield") $shield=$item[3];
+		if ($i=="arm" && substr($player["equip"][$i],0,12)=='item.weapon.') {	//weapon
+			$b=1;
+			$speed=$item[6]-round($skills[1]/2);
+			if (substr($player["equip"][$i],0,19)=='item.weapon.ranged.') $ranged=1; else $ranged=0;
+			$weaponby=$item[7];
+			$str=$item[5];
+			if ($skills[0]<$str) $str = $str-$skills[0];
+			if ($ranged) {		// стрельба
+				$need=$item[8];	// патроны
+				$needtitle=$item[9];	// патроны
+				$hit=10*($skills[1]+$skills[10]-1);
+				} else {		// холодное оружие
+					$need=''; 
+					$needtitle=''; 
+					$hit=10*($skills[1]+$skills[9]);
+					}
+			$damage_min=$item[3]-$str;
+			$damage_max=$item[4]-$str;
+			if (substr($player["equip"][$i],0,27)!="item.weapon.ranged.crossbow") {$damage_min+=$skills[0];$damage_max+=$skills[0];}	// в арбалетах сила не используется
+			}
+		}
+	if (!$b) {					// рукопашная
+		$ranged=0; 
+		$need=''; 
+		$needtitle=''; 
+		$damage_min=$skills[0]+$skills[8]-1;
+		$damage_max=$skills[0]+$skills[8]+1;
+		$hit=10*($skills[1]+$skills[8]+2);
+		$speed = 5-round($skills[1]/2);
+		$weaponby = "";
+		}
+
+	// проверка
+	if($hit<0) $hit=0;
+	if($uklon<0) $uklon=0;
+	if($parring<0) $parring=0;
+	if($magic_uklon<0) $magic_uklon=0;
+	if($magic_parring<0) $magic_parring=0;
+	if($damage_min<0) $damage_min=0;
+	if($damage_max<0) $damage_max=0;
+
+	// ок, подводим итог...
+	$player["war"]="$hit|$damage_min|$damage_max|$speed|$ranged|$armor|$uklon|$parring|$shield|$magic_uklon|$magic_parring|$magic_shield|$weaponby|$exp|$need|$needtitle";
+//	}

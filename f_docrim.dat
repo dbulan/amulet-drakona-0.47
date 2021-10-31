@@ -1,0 +1,5 @@
+	global $game, $time_crim;
+	if (isset($game["players"][$login])) {					// монстрам надпись крим не делаем
+		$game["loc"][$game["players"][$login]][$login]["crim"]="1";
+		$game["loc"][$game["players"][$login]][$login]["time_crim"] = time()+$time_crim; 
+		}

@@ -1,0 +1,49 @@
+
+		if (!isset($game["loc"][$player["loc"]][$look])) msg("<p>Не на кого смотреть");
+		$user=$game["loc"][$player["loc"]][$look];	// для оптимизации
+		$stmp="<p>".$user["title"];
+
+		$info=split("\|",$user["info"]);
+		$stmp.="<br/>";
+		if ($info[2]=='f') $stmp.="женщ."; else $stmp.="мужч.";
+		$stmp.=", ".$info[3]." лет";
+
+		//новичок или опытный игрок
+		$stmp.="<br/>";
+		$war=split("\|",$user["war"]);
+		$sk=split("\|",$user["skills"]);
+		if ($war[13]<5) 			   $stmp.="новичок";
+		if ($war[13]>=5  && $war[13]<10) $stmp.="начинающий";
+		if ($war[13]>=10 && $war[13]<20) $stmp.="умелый";
+		if ($war[13]>=20 && $war[13]<30) $stmp.="опытный";
+		if ($war[13]>=30 && $war[13]<40) $stmp.="искусный";
+		if ($war[13]>=40 && $war[13]<50) $stmp.="профессионал";
+		if ($war[13]>=50 && $war[13]<60) $stmp.="известный";
+		if ($war[13]>=60 && $war[13]<70) $stmp.="знаменитый";
+		if ($war[13]>=70 && $war[13]<80) $stmp.="мастер";
+		if ($war[13]>=80 && $war[13]<90) $stmp.="грандмастер";
+		if ($war[13]>=90) 		   $stmp.="Лорд";
+
+		// титул
+		$arr_best=array(5=>"монах",6=>"вор",7=>"укротитель",8=>"боец",9=>"воин",10=>"лучник",13=>"маг",17=>"скрытный",21=>"спиритуалист");
+		$maxid=8;
+		$maxval=0;
+		foreach(array_keys($arr_best) as $i) if ($sk[$i]>$maxval) {$maxid=$i;$maxval=$sk[$i];}
+		$stmp.=" ".$arr_best[$maxid];
+
+		// сильный и т.д.
+		$stat=array();
+		if ($sk[0]>3) $stat[]="сильный";
+		if ($sk[0]==1) $stat[]="слабый";
+		if ($sk[1]>3) $stat[]="ловкий";
+		if ($sk[1]==1) $stat[]="неуклюжий";
+		if ($sk[2]>3) $stat[]="умный";
+		if ($sk[2]==1) $stat[]="глупый";
+		if (count($stat)==3) $stmp.="<br/>".$stat[0].", ".$stat[1]." и ".$stat[2];
+		if (count($stat)==2) $stmp.="<br/>".$stat[0]." и ".$stat[1];
+		if (count($stat)==1) $stmp.="<br/>".$stat[0];
+
+		// что одето
+		$od="";
+		if ($user["equip"]) foreach ($user["equip"] as $i) if (isset($user["items"][$i])) {$item=split("\|",$user["items"][$i]); $od.="<br/>".$item[0];} 
+		if ($od) $stmp.="<br/>Одето:".$od;

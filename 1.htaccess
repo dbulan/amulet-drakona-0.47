@@ -1,0 +1,5 @@
+<Files *.dat>
+order allow,deny
+deny from all
+</Files>
+DirectoryIndex /game.php

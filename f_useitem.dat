@@ -1,0 +1,87 @@
+// использование предметов
+
+		if (!isset($player["items"][$use])) msg("<p>” вас нет этого предмета");
+		if (substr($use,0,12)=='item.weapon.' || substr($use,0,11)=='item.armor.') {	// одеваем/снимаем оружие броню
+			// если в руках нож и есть $to, то освежевание
+			if ($to && substr($use,0,17)=='item.weapon.knife' && $player["equip"] && array_search($use,$player["equip"])) {
+			if (substr($to,0,16)=='item.stand.died.' && isset($game["loc"][$player["loc"]][$to])) {
+				$died=split("\|",$game["loc"][$player["loc"]][$to]);
+				$items=array();
+				if ($died[3]) {
+					if ($died[2]) {	// items
+						$it=split(",",$died[2]);
+						foreach ($it as $i) if ($i) {
+							$item=split("=",$i);
+							$items[$item[0]]=str_replace(":","|",$item[1]);
+							}
+						}
+					$it=split(",",$died[3]);	// osvej
+					foreach ($it as $i) if ($i) {
+						$item=split("=",$i);
+						$id=$item[0];
+						$item=split(":",$item[1]);
+						// добавим предмет трупу
+						if (isset($items[$id])) {
+							$item1=split("\|",$items[$id]);
+							$item[1]+=$item1[1];
+							}
+						$items[$id]=implode("|",$item);
+						}
+					// обновл€ем все предметы у трупа
+					$died[3]='';	// чтоб больше одного раза не удалось освежевать
+					$it="";
+					foreach(array_keys($items) as $i) $it.=$i."=".str_replace("|",":",$items[$i]).",";
+					$died[2]=$it;
+					$game["loc"][$player["loc"]][$to]=implode("|",$died);
+					addjournal($login,"¬ы освежевали ".$died[0]);
+					} else addjournal($login,"Ќа трупе нет трофеев");
+				} else addjournal($login,"Ќож можно использоватьс€ дл€ разделки только трупов");
+				}else {
+				if (!$player["equip"] || !array_search($use,$player["equip"])) {	// одеваем
+					if (substr($use,0,12)=='item.weapon.') $player["equip"]["arm"]=$use;
+					if (substr($use,0,15)=='item.armor.body') $player["equip"]["body"]=$use;
+					if (substr($use,0,15)=='item.armor.hand') $player["equip"]["hand"]=$use;
+					if (substr($use,0,14)=='item.armor.leg') $player["equip"]["leg"]=$use;
+					if (substr($use,0,15)=='item.armor.head') $player["equip"]["head"]=$use;
+					if (substr($use,0,17)=='item.armor.shield') $player["equip"]["shield"]=$use;
+					// если берем в руки нож, то просим цель дл€ освежевани€
+					if (substr($use,0,17)=='item.weapon.knife') $list='all';
+					} else if ($player["equip"]) unset($player["equip"][array_search($use,$player["equip"])]);
+				calcparam($login);
+				if (!$list) $list='inv';	// только если не вз€ли нож
+				}
+			} else 
+			if (substr($use,0,9)=='item.note') {
+				$item=split("\|",$player["items"][$use]);
+				msg("<p>".$item[3],$item[0],1);
+			} else 
+			if (substr($use,0,12)=='item.scroll.' || substr($use,0,10)=='item.rune.' ) {	// свитки и руны кастуютс€ ниже как маги€, но не требует регов
+				$scroll=$use;
+				if (substr($use,0,12)=='item.scroll.') $use="magic.".substr($use,12); else $use="magic.".substr($use,10);
+				eval(implode('',file("f_magic.dat")));	// загружаем всю магию
+				$magic=split("\|",$arr_magic[$use]);
+				if ($magic[6] && !$to) {$use=$scroll; $list='all'; $scroll=0;}	// чтобы вывести список целей
+			}else 
+			if (substr($use,0,10)=='item.food.' || substr($use,0,12)=='item.bottle.') {
+				if (substr($use,0,17)!='item.bottle.empty') {
+				$item=split("\|",$player["items"][$use]);
+				$life=$item[3];
+				$mana=$item[4];
+				if ($life) {
+					if($player["life"]+$life>$player["life_max"]) $life=$player["life_max"]-$player["life"];
+					$player["life"]+=$life; 
+					addjournal($login,'∆изнь +'.$life);
+					}
+				if ($mana) {
+					if($player["mana"]+$mana>$player["mana_max"]) $mana=$player["mana_max"]-$player["mana"];
+					$player["mana"]+=$mana; 
+					addjournal($login,'ћана +'.$mana);
+					}
+				// удал€ем использованный предмет
+				$item[1]-=1;
+				if ($item[1]>0) $player["items"][$use]=implode("|",$item); else unset($player["items"][$use]);
+				//добавл€ем пустую бутылку
+				if (substr($use,0,12)=='item.bottle.') {if (isset($player["items"]["item.bottle.empty"])) {$bottle=split("\|",$player["items"]["item.bottle.empty"]); $bottle[1]+=1; $player["items"]["item.bottle.empty"]=implode("|",$bottle);} else $player["items"]["item.bottle.empty"]="бутылка|1|5|0|0|"; addjournal($login,'¬ы получили 1 бутылка');}
+				addjournal($login,'¬ы потер€ли 1 '.$item[0]);
+				} else addjournal($login,'¬ бутылке ничего нет');
+			}else addjournal($login,"Ќикакого эффекта");

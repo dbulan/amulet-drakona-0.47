@@ -1,0 +1,17 @@
+	// проверим, если такой выход в локации с игроком
+	$old=split("\|",$locations[$player["loc"]]);
+	if (isset($locations[$go]) && array_search($go,$old)) {
+		$new=split("\|",$locations[$go]);
+		if (!$old[1] && $new[1]) addjournal($login,"Вы на охраняемой территории");
+		if ($old[1] && !$new[1]) addjournal($login,"Вы покинули охраняемую территорию");
+		addjournalall($player["loc"],$player["title"]." ушел ".$old[array_search($go,$old)-1],$login);
+		$game["loc"][$go][$login]=$game["loc"][$player["loc"]][$login];
+		unset($game["loc"][$player["loc"]][$login]);
+		unset($player);
+		$player=&$game["loc"][$go][$login];
+		unset($player["attack"]);
+		$game["players"][$login]=$go;
+		$player["loc"]=$go;
+		addjournalall($go,"Пришел ".$player["title"],$login);
+		$page_desc = "1";	// вывести описание локации
+		}

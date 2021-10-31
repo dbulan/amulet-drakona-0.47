@@ -1,0 +1,172 @@
+
+// страницы логина и регистрации
+
+			//linkОсновнойСайт
+if ($tmp=='') msg("<p align=\"center\"><p align=\"center\"><a href=\"$PHP_SELF?site=connect\">Войти</a><br/><a href=\"$PHP_SELF?site=reg\">Регистрация</a><br/><a href=\"$PHP_SELF?site=online\">Кто онлайн?</a><br/><a href=\"$PHP_SELF?site=rule\">Правила</a><br/><a href=\"forum.php\">Форум</a><br/><a href=\"$PHP_SELF?site=about\">Автор</a><br/><br/><a href=\"http://wap.computermag.ru\">Официальный сайт игры: wap.computermag.ru</a>",$game_title,0,'none');
+//if ($site=='rule') msg("<p>Версия ".$version."<br/>".$game_title." - это многопользовательская текстовая игра жанра RPG, в которую можно играть с мобильного телефона через WAP.<br/>В ней можно путешествовать по миру, разговаривать с игровыми персонажами и другими игроками, выполнять квесты, воевать, использовать сотни предметов и десятки заклинаний, торговать, развивать свои навыки и многое, многое другое... При этом одновременно с вами в игре может находиться неограниченное число других игроков, взаимодействие с которыми происходит в режиме реального времени.","Правила",0,'none');
+if ($site=='rule') msg("<p>Версия ".$version."<br/>".$game_title." - это многопользовательская текстовая игра жанра RPG, в которую можно играть с мобильного телефона через WAP.<br/>В игре свыше 200 локаций, более 20 разных заклинаний, десятки предметов - оружие, броня, элексиры, еда и т.д., более 40 NPC с нелинейными диалогами, 18 навыков, которые можно развивать, включая такие как \"приручение животных\", \"воровство\" и т.д., чат, встроенный аналог ICQ и многое, многое другое...","Правила",0,'none');
+if ($site=='about') msg("Автор оригинальной версии игры: Blade (blade17@rambler.ru).<br/>Официальный сайт игры: <a href=\"http://wap.computermag.ru/game/\">wap.computermag.ru</a>.<br/>PHP исходники игры можно скачать с сайта http://blade.fklab.com.<br/>Возможно, в игру на этом сайте внесены изменения его владельцем/админом, поэтому по всем вопросам обращайтесь на форум или к владельцу сайта.",$game_title,0,'none');
+//$game_title." - это многопользовательская текстовая игра жанра RPG, в которую можно играть с мобильного телефона через WAP.
+if ($site=='connect') {	//linkЛогин
+$stmp="Логин:
+<br/><input name=\"login\"/>
+<br/>Пароль:
+<br/><input name=\"p\"/>
+<br/><a href=\"$PHP_SELF?login=$(login)&p=$(p)&site=connect2\">Войти</a>
+<br/><a href=\"$PHP_SELF?site=lostpassword&lost=$(login)\">Я забыл пароль</a>
+<br/><a href=\"$PHP_SELF?site=reg\">Регистрация</a>";
+if ($debug) $stmp.="<p><form action=$PHP_SELF>
+<table><tr><td>
+<input type=hidden name=site value=connect2>
+Логин:</td><td><input type=text name=login></td></tr><tr><td>
+Пароль:</td><td><input type=text name=p></td></tr><tr>
+</table>
+<br/><input type=submit value=Войти>
+</form>";
+	msg($stmp,$game_title,0,'none');
+	}
+
+if ($site=='lostpassword') {	//выслать пароль		//linkВыслатьПароль
+eval(implode('',file("f_loadoffline.dat")));
+if (isset($game["loc"]["loc.offline"]["user.".$lost])) {
+	$info=split("\|",$game["loc"]["loc.offline"]["user.".$lost]["info"]);
+	if ($info[1]) {
+		if (mail($info[1], "Пароль от игры ".$game_title, "Ваши данные для входа в свой аккаунт игры Амулет Дракона.\nЛогин: ".$lost."\nПароль: ".$info[0])) $stmp="Пароль выслан на адрес ".$info[1]."\n<br/><anchor>Назад<prev/></anchor>";
+			else $stmp="Не удается отправить писмо на адрес ".$info[1]."\n<br/><anchor>Назад<prev/></anchor>";
+		} else $stmp="Невозможно выслать пароль, так как при регистрации не был указан email.\n<br/><anchor>Назад<prev/></anchor>";
+	} else $stmp="Нет такого пользователя: $lost.<br/>Чтобы получить забытый пароль по почте, введите на предыдущем экране ваш логин и выберите ссылку \"Я забыл пароль\".\n<br/><anchor>Назад<prev/></anchor>";
+	msg($stmp,$game_title,0,'none');
+	}
+
+if ($site=='online') {	//кто онлайн		//linkОнлайн
+	ai();	// обновим список
+	$stmp="Всего игроков: ".intval($game["all"]);
+	if (count($game["players"])>0) {
+		$stmp.="\n<br/>Сейчас в игре ".count($game["players"])." человек:";
+		$ind=0;
+		$count=0;
+		if ($start<0 || !$start) $start=0;
+		$online=array_keys($game["players"]);
+		foreach($online as $i) {
+			if ($ind>=$start) {
+			$stmp.="\n<br/>".$game["loc"][$game["players"][$i]][$i]["title"];
+			$count++;
+			if ($count>=$count_show) break;	// след. страница, если слишком много человек или предметов
+			}
+			$ind++;
+			}
+		if ($start && $start-$count_show>=0) $stmp.="\n<br/><a href=\"$PHP_SELF?site=online&start=".($start-$count_show)."\">[<<]</a>";
+		if ($count+$start<count($game["players"])) {if (!$start) $stmp.="\n<br/>"; $stmp.= " <a href=\"$PHP_SELF?site=online&start=".($count+$start)."\">[+]</a>";}
+		} else $stmp.="\n<br/>Сейчас в игре никого нет";
+
+	msg($stmp,"Онлайн",0,'none');
+	}
+
+
+if ($site=='connect2') {
+	if (substr($login,0,5)!='user.') $login='user.'.$login;
+	if(!isset($game["players"][$login])) eval(implode('',file("f_loadoffline.dat")));
+	if (isset($game["loc"]["loc.offline"][$login]) || isset($game["players"][$login])) {
+		if (isset($game["players"][$login])) $info=split("\|",$game["loc"][$game["players"][$login]][$login]["info"]); else $info=split("\|",$game["loc"]["loc.offline"][$login]["info"]);
+		if ($info[0]!=$p) msg("Неправильный пароль",$game_title,0,'none');
+		// запоминаем логин в сессии
+		if ($usesession) {session_start(); $sid = session_id();$sid=substr($sid,0,6); session_id($sid); $_SESSION["login"]=$login;}	// укорачиваем имя сессии до 5 символов
+		if (!isset($game["players"][$login])) {
+			// добавляем в локацию...
+			$loc=$game["loc"]["loc.offline"][$login]["loc"];
+			$game["loc"][$loc][$login]=$game["loc"]["loc.offline"][$login];
+			$game["players"][$login]=$loc;
+			unset($game["loc"]["loc.offline"][$login]);
+			// всем в локации в журнал, что пришел такой-то
+			addjournalall($loc,"Появился ".$game["loc"][$loc][$login]["title"],$login);
+			// очищаем свой журнал
+			//$game["loc"][$loc][$login]["journal"]="";
+			if ($game["loc"][$loc][$login]["crim"]) {$game["loc"][$loc][$login]["time_crim"]=time()+$game["loc"][$loc][$login]["time_crim"]-$game["loc"][$loc][$login]["time"];}	// остаток времени сколько быть кримом
+			$game["loc"][$loc][$login]["time_regenerate"]=time();	// чтобы начать с тем же уровнем здоровья
+			unset($game["loc"][$loc][$login]["look"]);
+			$game["loc"][$loc][$login]["time"]=time();
+			}
+		msg("Логин успешно.\n<br/>Сохраните в своем телефоне закладку на эту страницу и вам не придется каждый раз вручную вводить логин и пароль.\n<br/><a href=\"$PHP_SELF?sid=$sid&look=1\">В игру</a>");
+		//$look=1; // при первом заходе выведем инфу о локации
+		}else msg ("Такой логин не существует, вам надо зарегистрироваться",$game_title,0,'none');
+	}
+
+if ($site=='reg') {		//linkРегистрация
+$stmp="Логин:
+<br/><input name=\"login\"/>
+<br/>Пароль:
+<br/><input name=\"p\"/>
+<br/>Email:
+<br/><input name=\"email\"/>
+<br/>Имя (будет видно в игре):
+<br/><input name=\"title\"/>
+<br/>Пол:
+<br/><select name=\"sex\" value=\"m\">
+<option value=\"m\">Муж.</option>
+<option value=\"f\">Жен.</option>
+</select>
+<br/>Возраст:
+<br/><input name=\"age\"/>
+<br/><a href=\"$PHP_SELF?login=$(login)&p=$(p)&email=$(email)&title=$(title)&sex=$(sex)&age=$(age)&site=reg2\">Продолжить</a>";
+if($debug) $stmp.="
+<p><form action=$PHP_SELF>
+<table><tr><td>
+<input type=hidden name=site value=reg2>
+Логин:</td><td><input type=text name=login value=></td></tr><tr><td>
+Пароль:</td><td><input type=text name=p value=></td></tr><tr><td>
+Email:</td><td><input type=text name=email value=></td></tr><tr><td>
+Имя (будет видно в игре):</td><td><input type=text name=title value=></td></tr><tr><td>
+Пол:</td><td>
+<input type=radio name=sex value=m checked=true>Мужской<br/>
+<input type=radio name=sex value=f>Женский</td></tr><tr><td>
+Возраст:</td><td><input type=text name=age value=23></td></tr>
+</table>
+<br/><input type=submit value=Продолжить>
+</form>";
+	msg($stmp,$game_title,0,'none');
+	}
+
+if ($site=='reg2') {
+	if (!$login) msg("Заполните все поля.<br/><anchor>назад<prev/></anchor>",$game_title,0,'none');
+	if (!preg_match("/\w/",$title)) msg("В имени должны присутствовать буквы или цифры.<br/><anchor>назад<prev/></anchor>",$game_title,0,'none');
+	if (substr($login,0,5)!='user.') $login='user.'.$login;
+	foreach(array_keys($game["players"]) as $i) {
+		if ($login==$i) msg("Такой логин уже существует, выберите другой<br/><a href=\"$PHP_SELF?reg=1\">Назад</a>",$game_title,0,'none');
+		if ($title==$game["loc"][$game["players"][$i]][$i]["title"]) msg("Имя ".$title." уже занято, выберите другое<br/><a href=\"$PHP_SELF?reg=1\">Назад</a>",$game_title,0,'none');
+		}
+	eval(implode('',file("f_loadoffline.dat")));
+	if ($game["loc"]["loc.offline"]) foreach(array_keys($game["loc"]["loc.offline"]) as $i) {
+		if ($login==$i) msg("Такой логин уже существует, выберите другой<br/><a href=\"$PHP_SELF?reg=1\">Назад</a>",$game_title,0,'none');
+		if ($title==$game["loc"]["loc.offline"][$i]["title"]) msg("Имя ".$title." уже занято, выберите другое<br/><a href=\"$PHP_SELF?reg=1\">Назад</a>",$game_title,0,'none');
+		}
+	if (!isset($game["players"][$login]) && !isset($game["loc"]["loc.offline"][$login])) {
+		if (!$p || !$email || !$sex || !$age || !$title) msg("Заполните все поля!<br/><a href=\"$PHP_SELF?reg=1\">Назад</a>",$game_title,0,'none');
+		// сохраняем логин в сессии
+		if ($usesession) $_SESSION["login"]=$login;
+		$game["players"][$login]="loc.0";
+		$game["loc"]["loc.0"][$login] = array(
+			"title"=>$title,
+			"info"=>"$p|$email|$sex|$age|".time(),	// инфа и время создания
+			// skills=str|dex|int|level|points|meditation|steal|animaltaming|hand|coldweapon|ranged|parring|uklon|magic|magic_resist|magic_uklon|regeneration|hiding|look|steallook|animallore|spirit
+			"skills"=>"1|1|1|0|2|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0",
+			"loc"=>"loc.0", 
+			"ghost"=>"0", 
+			"crim"=>"0",
+			"time"=>time(), 
+			"macros"=>array(1=>array("name"=>"повторить","act"=>"last","obj"=>"\"last\"","to"=>"\"last\"")),
+			"journal"=>array(),
+			"equip"=>array(),
+			"items"=>array(
+					"item.misc.money"=>"монеты|400|1","item.note"=>"записка|1|0|Здравствуй, мой юный друг! Зная, что тебе нелегко придется в первое время, я снабдил тебя 400 монетами, потрать их на обучение и, в первую очередь, на поднятие силы и ловкости. Обо всем остальном тебе расскажет привратник Уин. Удачи и береги себя!<br/>подпись: БОГ",
+					"item.scroll.createfood"=>	"свиток Создать еду|1|20",
+					"item.scroll.war.arrow"=>	"свиток Магическая стрела|3|30",
+					"item.scroll.summon.wolf"=>	"свиток Призвать волка|2|45",
+					),
+			"magic"=>array(),
+			"msg"=>array(),
+			);
+		calcparam($login);	// обновим все значения
+		$game["all"]=$game["all"]+1;
+		msg("Регистрация завершена<br/><a href=\"$PHP_SELF?login=$login&p=$p&site=connect2\">Начать игру</a>",$game_title,0,'none');
+		} else msg("Персонаж с логином $login уже существует, задайте другой<br/><a href=\"$PHP_SELF?reg=1\">Назад</a>",$game_title,0,'none');
+	}

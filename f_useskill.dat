@@ -1,0 +1,53 @@
+// использование скиллов
+
+		$skills=split("\|",$player["skills"]);
+		if ($use=='skill.meditation') {
+			if (rand(0,100)<=$skills[5]*15 && $player["mana"]<$player["mana_max"]) {$player["mana"]+=1; addjournal($login,"Мана +1");} else addjournal($login,"Медитация прервалась");
+			}
+		if ($use=='skill.animaltaming') {
+			if (!$to) {$list='all';} else {
+			if (!isset($game["loc"][$player["loc"]][$to]) || substr($use,0,4)=="npc.") msg("<p>Некого приручать");
+			if ($game["loc"][$player["loc"]][$to]["tame"]) {
+				$tame=10*($skills[7]+1-$game["loc"][$player["loc"]][$to]["tame"]);
+				if ($tame>0 && $skills[20]>0) {
+					if (rand(0,100)<=$tame) {$game["loc"][$player["loc"]][$to]["owner"]=$login; $game["loc"][$player["loc"]][$to]["follow"]=$login; $game["loc"][$player["loc"]][$to]["time_owner"]=time()+60+rand(0,$skills[20]*10*60); addjournal($login,"Вы приручили ".$game["loc"][$player["loc"]][$to]["title"]);} else addjournal($login,"Не получилось приручить ".$game["loc"][$player["loc"]][$to]["title"]);
+					}else addjournal($login,"Слишком низкие навыки изучения и приручения животных");
+				}else addjournal($login,"Это существо невозможно приручить");
+			}
+			}
+		if ($use=='skill.steal') {
+			if (!$to) {$list='all';} else {
+			if ($to==$login) msg("<p>Нельзя воровать у самого себя");
+			if (substr($to,0,4)=='npc.') msg("<p>Воровать можно только у других игроков");
+			if (!isset($game["loc"][$player["loc"]][$to]) || substr($use,0,5)=="user.") msg("<p>Не у кого воровать (можно только у игроков)");
+			$skillsto=split("\|",$game["loc"][$player["loc"]][$to]);
+			if (!$id) {	// выведем список инвентори
+				if (rand(0,100)<10*($skills[1]+$skills[19]-$skillsto[18])) {
+					if (count($game["loc"][$player["loc"]][$to]["items"])==0) msg("<p>У этого игрока ничего нет");
+					$stmp="<p>Предметы:";
+					foreach(array_keys($game["loc"][$player["loc"]][$to]["items"]) as $i) {
+						$stmp.="<br/><a href=\"$PHP_SELF?sid=$sid&use=skill.steal&to=".$to."&id=".$i."\">";
+						$k=split("\|",$game["loc"][$player["loc"]][$to]["items"][$i]);
+						if ($k[1]>1) $stmp.=$k[0]." (".$k[1].")"; else $stmp.=$k[0];
+						$stmp.="</a>";
+						}
+					msg($stmp,$game["loc"][$player["loc"]][$to]["title"]);
+					} else {docrim($login); addjournal($login,"Вас заметили!"); addjournal($to,$player["title"]." пытался подглядеть в ваш рюкзак!");}
+				} else {	// воруем предмет $id, причем не спрашивая кол-во
+					$steal=10*($skills[1]+$skills[6]-3);
+					if ($steal>0) {
+						if (rand(0,100)<10*($skills[1]+$skills[19]-$skillsto[18]*1.5)) {
+							if (!isset($game["loc"][$player["loc"]][$to]["items"][$id])) msg("<p>У игрока нет такого предмета");
+							if (isset($player["items"][$id])) {
+								$k=split("\|",$game["loc"][$player["loc"]][$to]["items"][$id]);
+								$k1=split("\|",$player["items"][$id]);
+								$k1[1]+=$k[1];
+								$player["items"][$id]=implode("|",$k1);
+								} else $player["items"][$id]=$game["loc"][$player["loc"]][$to]["items"][$id];
+							unset($game["loc"][$player["loc"]][$to]["items"][$id]);
+							calcparam($to);
+							}else {docrim($login); addjournal($login,"Вас застали за воровством!"); addjournal($to,$player["title"]." пытался вас обворовать!");}
+						}else addjournal($login,"Слишком низкие навыки воровства и подглядывания");
+					}//воруем предмет
+			}
+			}//skill.steal

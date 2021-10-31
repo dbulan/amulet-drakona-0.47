@@ -1,0 +1,68 @@
+
+if ($macros) {			//linkМакросы		// идет первым, т.к. подставляем в переменные значения из макроса
+	// просто создадим переменные согласно данным из макроса
+	if ($macros=='list') {	// выведем список макросов и форму для создания новых
+		$stmp="<p><a href=\"#add\">[Добавить]</a>";
+		$count=0;
+		for ($i=1;$i<10;$i++) if (isset($player["macros"][$i])) {
+			$count++;
+			$objtmp = $player["macros"][$i]["obj"]; $objtmp=str_replace("\"","",$objtmp);
+			$totmp = $player["macros"][$i]["to"]; $totmp=str_replace("\"","",$totmp);
+			$stmp.="\n<br/><anchor>".$player["macros"][$i]["name"]."<go href=\"#add\"><setvar name=\"num\" value=\"".$i."\"/><setvar name=\"name\" value=\"".$player["macros"][$i]["name"]."\"/><setvar name=\"act\" value=\"".$player["macros"][$i]["act"]."\"/><setvar name=\"obj\" value=\"".$objtmp."\"/><setvar name=\"to\" value=\"".$totmp."\"/></go></anchor> <a href=\"$PHP_SELF?sid=$sid&macros=delete&num=".$i."\">Удалить</a>";
+			}
+if ($num) $num=" value=\"$num\"";	// это если открываем части чно заполненные
+if ($act) $act=" value=\"$act\"";
+if ($obj) $obj=" value=\"$obj\"";
+if ($use) $obj=" value=\"$use\"";	// это если выбирали предмет, магию или скилл
+if ($to) $to=" value=\"$to\"";
+if ($name) $name=" value=\"$name\""; else $name=" value=\"Macros".($count+1)."\"";
+
+$stmp.="\n</p>\n</card>\n<card id=\"add\" title=\"Макросы\">\n<p>
+Номер (0..9): <input name=\"num\" size=\"1\"$num/>
+<br/>Имя (без пробелов): 
+<br/><input name=\"name\"$name/>
+<br/>Действие: <select name=\"act\"$act>
+<option value=\"last\">Последнее</option>
+<option value=\"attack\">Атаковать</option>
+<option value=\"use\">Использовать</option>
+<option value=\"say\">Сказать</option>
+</select>
+<br/><a href=\"$PHP_SELF?sid=$sid&macro=1&list=inv&num=$(num)&name=$(name)&act=$(act)&obj=$(obj)&to=$(to)\">Предметы</a> <a href=\"$PHP_SELF?sid=$sid&macro=1&list=magic&macro=1&num=$(num)&name=$(name)&act=$(act)&obj=$(obj)&to=$(to)\">Магия</a> <a href=\"$PHP_SELF?sid=$sid&macro=1&list=skill&num=$(num)&name=$(name)&act=$(act)&obj=$(obj)&to=$(to)\">Навыки</a>
+<br/><input name=\"obj\"$obj/>
+<br/>Цель: <select name=\"to\"$to>
+<option value=\"last\">Последняя</option>
+<option value=\"self\">На себя</option>
+</select>
+";
+$stmp.="\n<br/><a href=\"$PHP_SELF?sid=$sid&macros=save&num=$(num)&name=$(name)&act=$(act)&obj=$(obj)&to=$(to)\">Сохранить</a>";
+
+
+		msg($stmp,"Макросы");
+		}
+	if ($macros=='save' && $num) {// сохраним, $num = номер, $name=имя $act=action, $obj = объект, $to=цель
+		if ($num<1 || $num>9) msg("<p>Номер макроса должен быть в пределах от 1 до 9");
+		if (!$name) msg("<p>Задайте макросу имя!");
+		$player["macros"][$num]["name"]=$name;
+		$player["macros"][$num]["act"]=$act;
+		$player["macros"][$num]["obj"]="\"".$obj."\"";
+		$player["macros"][$num]["to"]="\"".$to."\"";
+		msg("<p>Макрос ".$name." сохранен");
+		}
+	if ($macros=='delete' && $num) {// удалим $num
+		unset($player["macros"][$num]);
+		msg("<p>Макрос ".$num." удален");
+		}
+	if ($macros>0 && $macros<10) {	// сам макрос
+		$act = $player["macros"][$macros]["act"];
+		if ($act=='last') $act=$player["macros"]["last"]["action"];
+		$obj = $player["macros"][$macros]["obj"];
+		if ($obj=='"last"') $obj=$player["macros"]["last"]["object"];
+		$to = $player["macros"][$macros]["to"];
+		if ($to=='"last"') $to=$player["macros"]["last"]["target"];
+		if ($to=='"self"') $to=$login;
+		// переназначаем переменные
+		if ($act && $obj) eval('$'.$act."=".$obj.";");
+		if ($to) eval('$to='.$to.";");
+		} else msg("<p>Нет такого макроса");
+	}
+

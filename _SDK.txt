@@ -1,0 +1,98 @@
+
+Здесь лежит информация о структуре игры. Некоторые вещи может уже устарели, этот файл я использовал когда проектировал игровой мир.
+
+
+
+/*----------------------------------
+Онлайновая многопользовательская текстовая RPG для мобильных телефонов с поддержкой WAP.
+Просто положите файлы на сервер с поддержкой PHP и откройте game.php с мобильного телефона или через wap-эмулятор http://wapsilon.com.
+
+blade17@rambler.ru ICQ:14746795
+------------------------------------
+
+------------------------------------*/
+
+
+//Игра
+players[id]=loc: в какой локации находится, исп. для экспорта и т.д.
+online[]: кто в онлайне
+magic[]: описание всех заклинаний
+locations:array(): items локаций, причем в локации loc.offline все игроки в оффлайн и у них в loc их последняя локация
+loc_del:array(id=time)
+loc_add:array(id=array(time,item,respawn=time_min|time_max|count_min|count_max))	// respawn обновляет время и кол-во предметов в таймере
+lastai: время последней проверки всех игроков онлайн
+
+//Локация
+id=title|guard|to|title|to|title
+
+//игрок
+info=password|email|sex|age|time_create
+time: когда последний раз был онлайн
+equip=array(arm,body,hand,leg,head,shield=id): что в руках, одето на тело|руки|ноги|голову|щит
+ghost=1
+skills=str|dex|int|level|points|meditation|steal|animaltaming|hand|coldweapon|ranged|parring|uklon|magic|magic_resist|magic_uklon|regeneration|hiding|look|steallook|animallore|spirit
+magic[]
+journal[]
+macros[]
+msg[id]='text': сообщения
+
+// NPC
+npc=array(title,life,life_max,mana,mana_max
+war=hit|damage_min|damage_max|speed|ranged|armor|uklon|parring|shield|magic_uklon|magic_parring|magic_shield|weaponby|exp|need|needtitle
+attack=id: при выводе смотрим, есть ли в локации такой, если есть, то добавляем: атакует ххх["title"]
+bank=array(id=title|count|cost|..)
+items=array(id=title|count|cost|..)
+respawn=loc|time_min|time_max
+respawn_counts=count1..count2|count1..count: это случайные кол-ва предметов в items при респавне (деньги и т.д.)
+crim=1
+speak=id: в файле speak.dat
+tame: сложность приручения, 1..4
+owner,follow,guard,time_owner,destroyonfree
+osvej: item_id=title:count:cost:param,item_id=title:count:cost:param	- эта строка добавляется к предметам трупа при освежевании ножом
+move=num|time_min|time_max|onlyguard,time_nextmove,moved[]: id локаций, которые посетили
+bankir=1
+healer=1
+trader=price_buy|price_sell|period|sayno	- когда игрок покупает|продает|период обновления товаров|что говорит когда ему дают товар, кот. он не покупает
+trader_filter=id1|id2	- покупает только предметы, в id кот. есть эти слова
+trader_time
+// у продавца предметы в bank[] в виде: id="ver|min|max=title|count|cost|...", причем count может быть и 0!!!
+-----------------
+диалоги:
+
+id=title|title|to|title|to
+id=magic|id|cost|min		- только если навык магии больше или равен min
+id=skill|id|cost|min|max	- повышает навык на единицу, но только если текущий в пределах min и max
+// дальше возможные выходы в текущем диалоге (таких ключей в массиве нет!), например: &id=buy
+buy					- выводит список товаров продавца, их кол-во и цену
+sell					- выводит список предметов игрока, их кол-во и цену
+tobank				- список предметов, кот. положить в банк
+frombank				- список предметов в банке
+
+-----------------
+
+// только у stand нет count и cost, у остальных есть
+item.stand.xxx=title|desc
+item.stand.ressurect	- воскрешает при прикосновении
+item.stand.died=title|crim|item_id=title:count:cost,item_id=title:count:cost,|osvej1:param1:param2,osvej2:param1:param2
+
+// все перемещаемые предметы начинаются на title|count|cost
+item.note.xxx=title|count|cost|desc - записка
+item.food|bottle.xxx=title|count|cost|life|mana
+item.hunter|misc|ring|crystal|magic|scroll|rune|recallrune.xxx=title|count|cost
+item.scroll.id	- магия id
+item.rune.id	- магия id
+item.recallrune.empty|loc.0	- recall в локацию loc.0
+item.weapon.xxx=title|count|cost|damage_min|damage_max|str|speed|weaponby|need_id|needtitle
+item.weapon.ranged.xxx	- стрелковое, может иметь need
+item.weapon.knife.xxx	- позволяет освежевывать туши
+item.armor.body|hand|leg|head|shield.xxx=title|count|cost|armor
+
+magic.xxx=title|mana|level|say|damage_min|damage_max|needtarget|onlycrim|speed|need_id:count:title|need_id:count:title
+
+npc.guard.xxx
+npc.crim.xxx
+npc.animal.xxx	- на них действует magic.charm, нейтральные существа
+
+
+
+
